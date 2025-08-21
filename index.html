@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Goal Staircase — 3–5 Subgoals to a Final Goal</title>
-<meta name="description" content="Interactive goal staircase: define a final goal and 3–5 subgoals, reorder, track progress, and save.">
+<title>Måltrappe — 3–5 delmål til et slutmål</title>
+<meta name="description" content="Interaktiv måltrappe: definer et slutmål og 3–5 delmål, omarranger, spor fremgang og gem.">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
 <style>
@@ -215,104 +215,104 @@
     <div class="brand" aria-label="App brand">
       <div class="logo" aria-hidden="true"></div>
       <div>
-        <h1>Goal Staircase</h1>
-        <div class="muted" style="font-size:13px">Break one big goal into 3–5 concrete subgoals</div>
+        <h1>Måltrappe</h1>
+        <div class="muted" style="font-size:13px">Opdel ét stort mål i 3–5 konkrete delmål</div>
       </div>
     </div>
-    <div class="toolbar" role="toolbar" aria-label="Global actions">
-      <button class="btn primary" id="newPlanBtn" title="Start fresh (clears current plan)">🧭 New plan</button>
-      <button class="btn success" id="saveBtn" title="Save to this browser">💾 Save</button>
-      <button class="btn warn" id="exportBtn" title="Download as JSON">⬇️ Export</button>
-      <button class="btn" id="importBtn" title="Import JSON plan">⬆️ Import</button>
-      <button class="btn" id="printBtn" title="Print / PDF">🖨️ Print</button>
+    <div class="toolbar" role="toolbar" aria-label="Globale handlinger">
+      <button class="btn primary" id="newPlanBtn" title="Start forfra (nulstiller nuværende plan)">🧭 Ny plan</button>
+      <button class="btn success" id="saveBtn" title="Gem i denne browser">💾 Gem</button>
+      <button class="btn warn" id="exportBtn" title="Download som JSON">⬇️ Eksportér</button>
+      <button class="btn" id="importBtn" title="Importér JSON-plan">⬆️ Importér</button>
+      <button class="btn" id="printBtn" title="Udskriv / PDF">🖨️ Udskriv</button>
     </div>
   </header>
 
   <main>
-    <!-- Left column: Final goal + staircase -->
+    <!-- Venstre kolonne: Slutmål + trappe -->
     <section>
       <article class="panel goal-card" aria-labelledby="goal-title">
         <div style="grid-column:1/-1">
-          <h2 id="goal-title" class="goal-title">Your Final (Big) Goal</h2>
+          <h2 id="goal-title" class="goal-title">Dit slutmål</h2>
         </div>
 
         <div class="goal-inputs" style="grid-column:1/-1">
-          <input id="finalGoal" type="text" placeholder="e.g., Launch an online course" aria-label="Final goal title" />
-          <input id="finalDue" type="date" aria-label="Final goal due date" class="inline-input">
-          <textarea id="finalWhy" placeholder="Why does this matter? Success criteria, motivation, constraints…" aria-label="Why this goal?"></textarea>
+          <input id="finalGoal" type="text" placeholder="fx. Lancér et online kursus" aria-label="Titel på slutmål" />
+          <input id="finalDue" type="date" aria-label="Slutmål deadline" class="inline-input">
+          <textarea id="finalWhy" placeholder="Hvorfor er dette vigtigt? Succeskriterier, motivation, begrænsninger…" aria-label="Hvorfor dette mål?"></textarea>
           <div class="row" style="align-items:center">
-            <label class="checkbox" title="Mark final goal completed">
+            <label class="checkbox" title="Marker slutmål som fuldført">
               <input id="finalDone" type="checkbox" />
-              <span>Mark final goal as done</span>
+              <span>Marker slutmål som fuldført</span>
             </label>
-            <span class="chip" id="subgoalCountChip">0 / 5 subgoals</span>
+            <span class="chip" id="subgoalCountChip">0 / 5 delmål</span>
           </div>
         </div>
 
         <div class="progress" style="grid-column:1/-1">
           <div class="row" style="justify-content:space-between">
-            <strong>Progress</strong>
-            <small id="progressText">0% — 0 of 0 complete</small>
+            <strong>Fremgang</strong>
+            <small id="progressText">0% — 0 af 0 fuldført</small>
           </div>
-          <div class="meter" aria-label="Overall progress"><i id="meter"></i></div>
-          <small>Tip: keep subgoals concrete and measurable. Each should “unlock” the next step.</small>
+          <div class="meter" aria-label="Samlet fremgang"><i id="meter"></i></div>
+          <small>Tip: hold delmålene konkrete og målbare. Hvert trin skal “låse op” for det næste.</small>
         </div>
       </article>
 
       <article class="panel">
-        <div class="staircase" id="staircase" aria-live="polite" aria-label="Subgoal staircase"></div>
+        <div class="staircase" id="staircase" aria-live="polite" aria-label="Delmål trappe"></div>
       </article>
     </section>
 
-    <!-- Right column: side controls -->
-    <aside class="side" aria-label="Options">
+    <!-- Højre kolonne: sidekontroller -->
+    <aside class="side" aria-label="Valgmuligheder">
       <div class="panel">
-        <h4>Add subgoals (3–5)</h4>
+        <h4>Tilføj delmål (3–5)</h4>
         <div class="grid-2">
-          <button class="btn" id="addStepBtn">➕ Add subgoal</button>
-          <button class="btn" id="addSuggestedBtn" title="Generate 3 starter subgoals from the final goal">✨ Suggest 3</button>
+          <button class="btn" id="addStepBtn">➕ Tilføj delmål</button>
+          <button class="btn" id="addSuggestedBtn" title="Generér 3 forslag til delmål ud fra slutmålet">✨ Foreslå 3</button>
         </div>
-        <small class="muted">You can drag subgoals by the handle to change their order.</small>
+        <small class="muted">Du kan trække delmålene for at ændre rækkefølgen.</small>
       </div>
 
       <div class="panel">
-        <h4>Quality checks</h4>
+        <h4>Kvalitetstjek</h4>
         <div class="grid-1">
-          <button class="btn" id="checkSmarterBtn">🧪 SMART check</button>
-          <button class="btn" id="checkLimitBtn">🔢 Enforce 3–5 rule</button>
+          <button class="btn" id="checkSmarterBtn">🧪 SMART-tjek</button>
+          <button class="btn" id="checkLimitBtn">🔢 Tjek 3–5 reglen</button>
         </div>
       </div>
 
       <div class="panel export">
-        <h4>Export</h4>
+        <h4>Eksportér</h4>
         <div class="grid-2">
           <button class="btn warn" id="downloadJsonBtn">⬇️ JSON</button>
-          <button class="btn" id="copyLinkBtn">🔗 Copy share link</button>
+          <button class="btn" id="copyLinkBtn">🔗 Kopiér delingslink</button>
         </div>
-        <small class="muted">Share link is a compact URL containing your plan (no server).</small>
+        <small class="muted">Delingslinket er en kompakt URL med din plan (ingen server).</small>
       </div>
 
       <div class="panel import">
-        <h4>Import</h4>
+        <h4>Importér</h4>
         <div class="grid-1">
-          <input id="importFile" type="file" accept="application/json" class="inline-input" aria-label="Import JSON file">
-          <button class="btn" id="loadFromUrlBtn">🔗 Paste share link</button>
+          <input id="importFile" type="file" accept="application/json" class="inline-input" aria-label="Importér JSON-fil">
+          <button class="btn" id="loadFromUrlBtn">🔗 Indsæt delingslink</button>
         </div>
       </div>
 
       <div class="panel">
-        <h4>Keyboard tips</h4>
+        <h4>Tastaturtips</h4>
         <ul class="muted" style="margin:0 0 0 18px; padding:0; font-size:13px">
-          <li>Tab through fields; Enter toggles a selected subgoal’s checkbox</li>
-          <li>Drag with mouse (handle) or use Move ↑/↓ buttons</li>
-          <li>Ctrl/Cmd+S to Save; Ctrl/Cmd+P to Print</li>
+          <li>Brug tab til at navigere; Enter markerer valgt delmål som fuldført</li>
+          <li>Træk med musen (håndtag) eller brug Flyt ↑/↓ knapper</li>
+          <li>Ctrl/Cmd+S for at gemme; Ctrl/Cmd+P for at udskrive</li>
         </ul>
       </div>
     </aside>
   </main>
 
   <footer>
-    Built with ❤️ for clarity and momentum. No data leaves your browser.
+    Udviklet med ❤️ for klarhed og momentum. Ingen data forlader din browser.
   </footer>
 
 <script>
@@ -380,7 +380,7 @@
   function renderSteps(){
     els.staircase.innerHTML = "";
     const count = state.steps.length;
-    els.subgoalCountChip.textContent = `${count} / 5 subgoals`;
+    els.subgoalCountChip.textContent = `${count} / 5 delmål`;
 
     state.steps.forEach((step, idx) => {
       const card = document.createElement('section');
@@ -392,23 +392,23 @@
       card.innerHTML = `
         <header class="row">
           <div class="row" style="gap:8px">
-            <span class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder" tabindex="0">≡</span>
-            <h3 contenteditable="true" spellcheck="true" role="textbox" aria-label="Subgoal title" data-field="title">${escapeHTML(step.title || `Subgoal ${idx+1}`)}</h3>
-            <span class="chip">Step ${idx+1}</span>
+            <span class="drag-handle" title="Træk for at omarrangere" aria-label="Træk for at omarrangere" tabindex="0">≡</span>
+            <h3 contenteditable="true" spellcheck="true" role="textbox" aria-label="Titel på delmål" data-field="title">${escapeHTML(step.title || `Delmål ${idx+1}`)}</h3>
+            <span class="chip">Trin ${idx+1}</span>
           </div>
           <div class="controls">
-            <button class="btn" data-cmd="move-up" title="Move up">↑</button>
-            <button class="btn" data-cmd="move-down" title="Move down">↓</button>
-            <button class="btn danger" data-cmd="remove" title="Remove subgoal">🗑️</button>
+            <button class="btn" data-cmd="move-up" title="Flyt op">↑</button>
+            <button class="btn" data-cmd="move-down" title="Flyt ned">↓</button>
+            <button class="btn danger" data-cmd="remove" title="Fjern delmål">🗑️</button>
           </div>
         </header>
 
         <div class="row">
-          <input class="inline-input" type="date" value="${step.due || ""}" data-field="due" aria-label="Due date for subgoal">
-          <label class="checkbox"><input type="checkbox" data-field="done" ${step.done ? "checked":""} /> <span>Done</span></label>
+          <input class="inline-input" type="date" value="${step.due || ""}" data-field="due" aria-label="Deadline for delmål">
+          <label class="checkbox"><input type="checkbox" data-field="done" ${step.done ? "checked":""} /> <span>Fuldført</span></label>
         </div>
 
-        <textarea placeholder="Notes / milestone definition (how do we know it's complete?)" data-field="note">${escapeHTML(step.note || "")}</textarea>
+        <textarea placeholder="Noter / milepælsdefinition (hvordan ved vi det er fuldført?)" data-field="note">${escapeHTML(step.note || "")}</textarea>
       `;
 
       // Inline edit handlers
@@ -463,7 +463,7 @@
     const doneSteps = state.steps.filter(s => s.done).length + (state.final.done ? 1 : 0);
     const pct = total === 0 ? 0 : Math.round((doneSteps/total)*100);
     els.meter.style.width = `${pct}%`;
-    els.progressText.textContent = `${pct}% — ${doneSteps} of ${total} complete`;
+    els.progressText.textContent = `${pct}% — ${doneSteps} af ${total} fuldført`;
   }
 
   /** ---------- Mutators ---------- */
@@ -478,12 +478,12 @@
   };
   const addStep = (initial={}) => {
     if(state.steps.length>=5){
-      toast("You already have 5 subgoals. Remove one to add another.", "warn");
+      toast("Du har allerede 5 delmål. Fjern ét for at tilføje et nyt.", "warn");
       return;
     }
     state.steps.push({
       id: uid(),
-      title: initial.title || `Subgoal ${state.steps.length+1}`,
+      title: initial.title || `Delmål ${state.steps.length+1}`,
       note:  initial.note  || "",
       due:   initial.due   || "",
       done:  initial.done  || false,
@@ -546,24 +546,23 @@
   function smartCheck(){
     const issues = [];
     const title = (state.final.title||"").trim();
-    if(!title) issues.push("Final goal title is empty.");
+    if(!title) issues.push("Titel på slutmål mangler.");
     const steps = state.steps;
-    if(steps.length < 3 || steps.length > 5) issues.push("You must have 3–5 subgoals.");
+    if(steps.length < 3 || steps.length > 5) issues.push("Du skal have 3–5 delmål.");
     steps.forEach((s, i) => {
-      if(!(s.title||"").trim()) issues.push(`Subgoal ${i+1} has no title.`);
-      if(!s.note || s.note.trim().length < 8) issues.push(`Subgoal ${i+1}: add a clearer success definition in notes.`);
-      // Optional: date order heuristic
+      if(!(s.title||"").trim()) issues.push(`Delmål ${i+1} mangler titel.`);
+      if(!s.note || s.note.trim().length < 8) issues.push(`Delmål ${i+1}: tilføj en tydeligere definition af succes i noter.`);
       if(s.due && state.final.due && s.due > state.final.due) {
-        issues.push(`Subgoal ${i+1} due date is after the final goal's due date.`);
+        issues.push(`Delmål ${i+1} deadline er efter slutmålets deadline.`);
       }
     });
     // SMART hints
     const hints = [
-      "Specific — clear, unambiguous wording.",
-      "Measurable — a number or definitive check.",
-      "Achievable — realistic scope.",
-      "Relevant — aligned with final goal.",
-      "Time-bound — meaningful due date."
+      "Specifikt — klart og entydigt formuleret.",
+      "Målbart — et tal eller en tydelig markering.",
+      "Opnåeligt — realistisk omfang.",
+      "Relevant — i tråd med slutmålet.",
+      "Tidsbestemt — meningsfuld deadline."
     ];
     return { issues, hints };
   }
@@ -629,23 +628,23 @@
       if(obj && obj.final && Array.isArray(obj.steps)){
         state = obj;
         renderAll();
-        toast("Loaded plan from link", "ok");
+        toast("Plan indlæst fra link", "ok");
         return true;
       }
-    } catch(e){ console.warn("Invalid plan in URL"); }
+    } catch(e){ console.warn("Ugyldig plan i URL"); }
     return false;
   }
 
   /** ---------- Suggested generator (simple heuristic) ---------- */
   function suggestSubgoals(){
     const goal = (state.final.title||"").trim();
-    const base = goal || "your final goal";
+    const base = goal || "dit slutmål";
     const ideas = [
-      `Define scope & success metrics for ${base}`,
-      `Research & gather resources for ${base}`,
-      `Create a draft/first version toward ${base}`,
-      `Test with 3 users and collect feedback`,
-      `Polish & prepare launch assets`
+      `Definér omfang & succeskriterier for ${base}`,
+      `Undersøg & saml ressourcer til ${base}`,
+      `Lav et udkast/første version mod ${base}`,
+      `Test med 3 brugere og indsamle feedback`,
+      `Færdiggør & forbered lancering`
     ];
     // add first 3 that aren't already present
     const existingTitles = new Set(state.steps.map(s => s.title.trim().toLowerCase()));
@@ -656,7 +655,6 @@
   }
 
   /** ---------- Event wiring ---------- */
-  // Final goal fields
   els.finalGoal.addEventListener('input', e => { state.final.title = e.target.value; saveLocal(); });
   els.finalWhy.addEventListener('input',  e => { state.final.why   = e.target.value; saveLocal(); });
   els.finalDue.addEventListener('change', e => { state.final.due   = e.target.value; saveLocal(); });
@@ -666,44 +664,44 @@
   els.addStepBtn.addEventListener('click', () => addStep());
   els.addSuggestedBtn.addEventListener('click', () => suggestSubgoals());
   els.newPlanBtn.addEventListener('click', () => {
-    if(confirm("Start a new plan? This will clear the current one.")){
+    if(confirm("Starte en ny plan? Dette vil nulstille den nuværende.")){
       state = { final:{ title:"", why:"", due:"", done:false }, steps:[] };
       renderAll(); saveLocal(); location.hash = "";
     }
   });
-  els.saveBtn.addEventListener('click', () => { saveLocal(); toast("Saved to this browser ✅", "ok"); });
+  els.saveBtn.addEventListener('click', () => { saveLocal(); toast("Gemt i denne browser ✅", "ok"); });
   els.printBtn.addEventListener('click', () => window.print());
   els.checkSmarterBtn.addEventListener('click', () => {
     const {issues, hints} = smartCheck();
     if(issues.length===0){
-      toast("Looks SMART! 🎯", "ok");
-      alert("SMART check passed! Great job.\n\nHints:\n- " + hints.join("\n- "));
+      toast("SMART! 🎯", "ok");
+      alert("SMART-tjek bestået! Flot arbejde.\n\nTips:\n- " + hints.join("\n- "));
     } else {
-      alert("Please review:\n\n- " + issues.join("\n- ") + "\n\nSMART hints:\n- " + hints.join("\n- "));
+      alert("Tjek venligst:\n\n- " + issues.join("\n- ") + "\n\nSMART tips:\n- " + hints.join("\n- "));
     }
   });
   els.checkLimitBtn.addEventListener('click', () => {
     const n = state.steps.length;
-    if(n<3){ toast(`Add ${3-n} more subgoal${3-n===1?"":"s"} to reach 3.`, "warn"); }
-    else if(n>5){ toast(`You have ${n}. Remove ${n-5} to cap at 5.`, "warn"); }
-    else { toast("You're within the 3–5 sweet spot ✅", "ok"); }
+    if(n<3){ toast(`Tilføj ${3-n} delmål mere for at nå 3.`, "warn"); }
+    else if(n>5){ toast(`Du har ${n}. Fjern ${n-5} for at nå maksimalt 5.`, "warn"); }
+    else { toast("Du er indenfor 3–5 delmål ✅", "ok"); }
   });
 
   els.exportBtn.addEventListener('click', () => {
     const data = JSON.stringify(state, null, 2);
-    download('goal-staircase.json', data);
+    download('måltrappe.json', data);
   });
   els.downloadJsonBtn.addEventListener('click', () => {
     const data = JSON.stringify(state, null, 2);
-    download('goal-staircase.json', data);
+    download('måltrappe.json', data);
   });
   els.copyLinkBtn.addEventListener('click', async () => {
     const url = toShareURL();
     try {
       await navigator.clipboard.writeText(url);
-      toast("Share link copied! 🔗", "ok");
+      toast("Delingslink kopieret! 🔗", "ok");
     } catch {
-      prompt("Copy this link:", url);
+      prompt("Kopiér dette link:", url);
     }
   });
   els.importBtn.addEventListener('click', () => els.importFile.click());
@@ -714,30 +712,29 @@
     try{
       const obj = JSON.parse(text);
       if(obj && obj.final && Array.isArray(obj.steps)){
-        state = obj; renderAll(); saveLocal(); toast("Plan imported ✅", "ok");
-      } else { throw new Error("Invalid format"); }
+        state = obj; renderAll(); saveLocal(); toast("Plan importeret ✅", "ok");
+      } else { throw new Error("Ugyldigt format"); }
     }catch(err){
-      alert("Import failed: " + err.message);
+      alert("Import mislykkedes: " + err.message);
     } finally {
       e.target.value = "";
     }
   });
   els.loadFromUrlBtn.addEventListener('click', () => {
-    const url = prompt("Paste the share link (URL with #plan=...)");
+    const url = prompt("Indsæt delingslinket (URL med #plan=...)");
     if(!url) return;
     try {
       const hash = new URL(url).hash;
-      if(!hash) throw new Error("No #plan in URL");
+      if(!hash) throw new Error("Intet #plan i URL");
       location.hash = hash;
-      if(!tryLoadFromHash()) alert("Could not load plan from the provided link.");
+      if(!tryLoadFromHash()) alert("Kunne ikke indlæse plan fra det angivne link.");
     } catch(err){
-      alert("Invalid URL: " + err.message);
+      alert("Ugyldig URL: " + err.message);
     }
   });
 
-  // Keyboard shortcuts
   window.addEventListener('keydown', (e) => {
-    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); toast("Saved ✅", "ok"); }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); toast("Gemt ✅", "ok"); }
   });
 
   /** ---------- Boot ---------- */
@@ -745,11 +742,11 @@
     const loadedFromHash = tryLoadFromHash();
     if(!loadedFromHash) loadLocal();
     renderAll();
-    // If totally empty, prep three empty subgoals
+    // Hvis helt tom, tilføj tre tomme delmål
     if(state.steps.length===0){
-      addStep({ title:"Define success" });
-      addStep({ title:"Draft the core" });
-      addStep({ title:"Test & iterate" });
+      addStep({ title:"Definér succes" });
+      addStep({ title:"Lav kerneudkast" });
+      addStep({ title:"Test & justér" });
     }
   })();
 
