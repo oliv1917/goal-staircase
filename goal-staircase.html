@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Goal Staircase — 3–5 Subgoals to a Final Goal</title>
+<meta name="description" content="Interactive goal staircase: define a final goal and 3–5 subgoals, reorder, track progress, and save.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+<style>
+  :root{
+    --bg:#0f1220;
+    --panel:#171a2b;
+    --pill:#202645;
+    --muted:#96a0c8;
+    --text:#eaf0ff;
+    --accent:#7c9cff;
+    --accent-2:#4de2b6;
+    --danger:#ff7a88;
+    --warning:#ffd166;
+    --ok:#22c55e;
+    --ring: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+    --step-gap: 14px;
+    --radius: 14px;
+    --shadow: 0 8px 30px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box }
+  html,body { height:100% }
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(124,156,255,.15), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(77,226,182,.10), transparent 60%),
+      var(--bg);
+  }
+
+  header{
+    padding:24px clamp(16px, 3vw, 40px);
+    display:flex; gap:18px; align-items:center; justify-content:space-between;
+  }
+  .brand{
+    display:flex; gap:12px; align-items:center;
+  }
+  .logo{
+    inline-size:42px; block-size:42px; border-radius:10px;
+    background: conic-gradient(from 210deg, var(--accent), var(--accent-2));
+    box-shadow:var(--shadow);
+  }
+  h1{
+    font-size: clamp(20px, 3.2vw, 32px);
+    margin:0;
+    letter-spacing:.2px;
+  }
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap }
+  .btn{
+    appearance:none; border:0; color:var(--text); background:var(--pill);
+    padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+    transition: transform .08s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); background: #263062 }
+  .btn:focus-visible{ outline:none; box-shadow: var(--ring) }
+  .btn.primary{ background: linear-gradient(180deg, var(--accent), #5a7aff); color:#0b0f1d }
+  .btn.success{ background: linear-gradient(180deg, var(--accent-2), #1ecf9f); color:#042118 }
+  .btn.warn{ background: linear-gradient(180deg, var(--warning), #ffb703); color:#231a00 }
+  .btn.danger{ background: linear-gradient(180deg, var(--danger), #e05663); color:#2a0b10 }
+
+  main{
+    padding:0 clamp(16px, 3vw, 40px) 40px;
+    display:grid; grid-template-columns: 1.1fr .9fr; gap:24px;
+  }
+  @media (max-width: 1000px){
+    main{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: color-mix(in oklab, var(--panel) 90%, #000 10%);
+    border:1px solid color-mix(in oklab, var(--panel) 70%, #fff 5%);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* Final goal card */
+  .goal-card{
+    padding:20px;
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:14px;
+    align-items:center;
+  }
+  .goal-title{
+    margin:0;
+    font-size: clamp(18px, 2.6vw, 26px);
+  }
+  .goal-inputs{
+    display:grid; gap:12px; grid-template-columns: 1.2fr .8fr;
+  }
+  .goal-inputs input[type="text"], .goal-inputs textarea, .inline-input{
+    width:100%;
+    background: var(--pill);
+    color:var(--text);
+    border:1px solid transparent;
+    border-radius: 12px;
+    padding:12px 12px;
+    font-size:14px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .goal-inputs textarea{ resize:vertical; min-height:72px }
+  .inline-input:focus, .goal-inputs input:focus, .goal-inputs textarea:focus{ outline:none; box-shadow: var(--ring) }
+
+  /* Progress */
+  .progress{
+    display:grid; gap:10px; padding:16px 20px 20px;
+  }
+  .meter{
+    height:14px; background:#0b0f1d; border-radius:999px; border:1px solid #2b335b; overflow:hidden;
+  }
+  .meter > i{
+    display:block; height:100%; width:0%;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    box-shadow: inset 0 -2px 6px rgba(0,0,0,.3);
+    transition: width .35s ease;
+  }
+  .progress small{ color:var(--muted) }
+
+  /* Staircase */
+  .staircase{
+    display:grid;
+    gap: var(--step-gap);
+    padding: 20px;
+    align-items:end;
+    grid-auto-rows: minmax(110px, auto);
+  }
+  .step{
+    background: linear-gradient(180deg, #1b2040, #13172f);
+    border:1px solid #2a335f;
+    border-radius:12px;
+    padding:12px;
+    position:relative;
+    min-height:110px;
+    display:flex; flex-direction:column; gap:10px;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .15s ease;
+  }
+  .step[data-elev="1"]{ transform: translateY(0) }
+  .step[data-elev="2"]{ transform: translateY(-6px) }
+  .step[data-elev="3"]{ transform: translateY(-12px) }
+  .step[data-elev="4"]{ transform: translateY(-18px) }
+  .step[data-elev="5"]{ transform: translateY(-24px) }
+  .step.dragging{
+    opacity:.9; box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    border-color: var(--accent);
+  }
+  .step header{
+    padding:0; margin:0; justify-content:space-between;
+  }
+  .step h3{
+    font-size:16px; margin:0; font-weight:700;
+  }
+  .muted{ color:var(--muted) }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .row .inline-input{ flex:1 }
+  .chip{
+    padding:.35rem .6rem; border-radius:999px; background:#0f1431; font-weight:700;
+    border:1px solid #2b335b; color:#9eb1ff; letter-spacing:.3px;
+  }
+  .drag-handle{
+    cursor:grab; user-select:none; padding:.4rem .6rem;
+    border-radius:10px; background:#0d1330; border:1px dashed #2b335b; color:#b9c4ff; font-weight:800;
+  }
+  .drag-handle:active{ cursor:grabbing }
+
+  .step textarea{
+    background:#0e1433; border:1px solid #2a335f; color:var(--text);
+    border-radius:10px; padding:8px 10px; min-height:54px; resize:vertical; width:100%;
+  }
+  .controls{ display:flex; gap:8px; }
+  .controls .btn{ padding:8px 10px; border-radius:10px; font-size:13px }
+
+  .checkbox{
+    display:flex; align-items:center; gap:8px; user-select:none; cursor:pointer;
+  }
+  .checkbox input{ appearance:none; width:18px; height:18px; border-radius:4px; border:2px solid #5173ff; display:grid; place-items:center; }
+  .checkbox input:checked{ background:var(--ok); border-color:var(--ok) }
+  .checkbox input:checked::after{ content:"✓"; font-size:14px; color:#02140a; font-weight:900; }
+
+  /* Side panel */
+  .side{
+    display:grid; gap:16px; padding:16px;
+  }
+  .side .panel{ padding:14px }
+  .side h4{ margin:6px 0 10px; font-size:15px; letter-spacing:.3px; color:#cdd6ff }
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px }
+  .grid-1{ display:grid; gap:10px }
+
+  /* Footer help */
+  footer{
+    padding:16px 24px 50px; color:var(--muted); font-size:13px;
+  }
+
+  /* Print-friendly */
+  @media print{
+    header, .toolbar, .side .panel.export, .side .panel.import { display:none !important }
+    body{ background:#fff; color:#111 }
+    .panel{ box-shadow:none; border-color:#ddd }
+    .step{ background:#fff; border-color:#ddd }
+    .meter{ background:#eee; border-color:#ddd }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand" aria-label="App brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Goal Staircase</h1>
+        <div class="muted" style="font-size:13px">Break one big goal into 3–5 concrete subgoals</div>
+      </div>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Global actions">
+      <button class="btn primary" id="newPlanBtn" title="Start fresh (clears current plan)">🧭 New plan</button>
+      <button class="btn success" id="saveBtn" title="Save to this browser">💾 Save</button>
+      <button class="btn warn" id="exportBtn" title="Download as JSON">⬇️ Export</button>
+      <button class="btn" id="importBtn" title="Import JSON plan">⬆️ Import</button>
+      <button class="btn" id="printBtn" title="Print / PDF">🖨️ Print</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left column: Final goal + staircase -->
+    <section>
+      <article class="panel goal-card" aria-labelledby="goal-title">
+        <div style="grid-column:1/-1">
+          <h2 id="goal-title" class="goal-title">Your Final (Big) Goal</h2>
+        </div>
+
+        <div class="goal-inputs" style="grid-column:1/-1">
+          <input id="finalGoal" type="text" placeholder="e.g., Launch an online course" aria-label="Final goal title" />
+          <input id="finalDue" type="date" aria-label="Final goal due date" class="inline-input">
+          <textarea id="finalWhy" placeholder="Why does this matter? Success criteria, motivation, constraints…" aria-label="Why this goal?"></textarea>
+          <div class="row" style="align-items:center">
+            <label class="checkbox" title="Mark final goal completed">
+              <input id="finalDone" type="checkbox" />
+              <span>Mark final goal as done</span>
+            </label>
+            <span class="chip" id="subgoalCountChip">0 / 5 subgoals</span>
+          </div>
+        </div>
+
+        <div class="progress" style="grid-column:1/-1">
+          <div class="row" style="justify-content:space-between">
+            <strong>Progress</strong>
+            <small id="progressText">0% — 0 of 0 complete</small>
+          </div>
+          <div class="meter" aria-label="Overall progress"><i id="meter"></i></div>
+          <small>Tip: keep subgoals concrete and measurable. Each should “unlock” the next step.</small>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="staircase" id="staircase" aria-live="polite" aria-label="Subgoal staircase"></div>
+      </article>
+    </section>
+
+    <!-- Right column: side controls -->
+    <aside class="side" aria-label="Options">
+      <div class="panel">
+        <h4>Add subgoals (3–5)</h4>
+        <div class="grid-2">
+          <button class="btn" id="addStepBtn">➕ Add subgoal</button>
+          <button class="btn" id="addSuggestedBtn" title="Generate 3 starter subgoals from the final goal">✨ Suggest 3</button>
+        </div>
+        <small class="muted">You can drag subgoals by the handle to change their order.</small>
+      </div>
+
+      <div class="panel">
+        <h4>Quality checks</h4>
+        <div class="grid-1">
+          <button class="btn" id="checkSmarterBtn">🧪 SMART check</button>
+          <button class="btn" id="checkLimitBtn">🔢 Enforce 3–5 rule</button>
+        </div>
+      </div>
+
+      <div class="panel export">
+        <h4>Export</h4>
+        <div class="grid-2">
+          <button class="btn warn" id="downloadJsonBtn">⬇️ JSON</button>
+          <button class="btn" id="copyLinkBtn">🔗 Copy share link</button>
+        </div>
+        <small class="muted">Share link is a compact URL containing your plan (no server).</small>
+      </div>
+
+      <div class="panel import">
+        <h4>Import</h4>
+        <div class="grid-1">
+          <input id="importFile" type="file" accept="application/json" class="inline-input" aria-label="Import JSON file">
+          <button class="btn" id="loadFromUrlBtn">🔗 Paste share link</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>Keyboard tips</h4>
+        <ul class="muted" style="margin:0 0 0 18px; padding:0; font-size:13px">
+          <li>Tab through fields; Enter toggles a selected subgoal’s checkbox</li>
+          <li>Drag with mouse (handle) or use Move ↑/↓ buttons</li>
+          <li>Ctrl/Cmd+S to Save; Ctrl/Cmd+P to Print</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Built with ❤️ for clarity and momentum. No data leaves your browser.
+  </footer>
+
+<script>
+(() => {
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  const els = {
+    finalGoal: $('#finalGoal'),
+    finalWhy: $('#finalWhy'),
+    finalDue: $('#finalDue'),
+    finalDone: $('#finalDone'),
+    staircase: $('#staircase'),
+    subgoalCountChip: $('#subgoalCountChip'),
+    meter: $('#meter'),
+    progressText: $('#progressText'),
+    addStepBtn: $('#addStepBtn'),
+    addSuggestedBtn: $('#addSuggestedBtn'),
+    newPlanBtn: $('#newPlanBtn'),
+    saveBtn: $('#saveBtn'),
+    exportBtn: $('#exportBtn'),
+    printBtn: $('#printBtn'),
+    checkSmarterBtn: $('#checkSmarterBtn'),
+    checkLimitBtn: $('#checkLimitBtn'),
+    downloadJsonBtn: $('#downloadJsonBtn'),
+    copyLinkBtn: $('#copyLinkBtn'),
+    importFile: $('#importFile'),
+    loadFromUrlBtn: $('#loadFromUrlBtn'),
+    importBtn: $('#importBtn'),
+  };
+
+  /** ---------- State ---------- */
+  let state = {
+    final: { title:"", why:"", due:"", done:false },
+    steps: [] // {id, title, note, due, done}
+  };
+
+  /** ---------- Persistence ---------- */
+  const STORAGE_KEY = "goal-staircase/v1";
+  const saveLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const loadLocal = () => {
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const obj = JSON.parse(raw);
+      if(obj && obj.final && Array.isArray(obj.steps)) {
+        state = obj; renderAll();
+      }
+    }catch(e){ console.warn("Load failed", e) }
+  };
+
+  /** ---------- Rendering ---------- */
+  function renderAll(){
+    // Final goal
+    els.finalGoal.value = state.final.title || "";
+    els.finalWhy.value  = state.final.why || "";
+    els.finalDue.value  = state.final.due || "";
+    els.finalDone.checked = !!state.final.done;
+
+    renderSteps();
+    renderProgress();
+  }
+
+  function renderSteps(){
+    els.staircase.innerHTML = "";
+    const count = state.steps.length;
+    els.subgoalCountChip.textContent = `${count} / 5 subgoals`;
+
+    state.steps.forEach((step, idx) => {
+      const card = document.createElement('section');
+      card.className = 'step';
+      card.role = 'group';
+      card.dataset.id = step.id;
+      card.dataset.elev = String(idx+1); // visual offset
+
+      card.innerHTML = `
+        <header class="row">
+          <div class="row" style="gap:8px">
+            <span class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder" tabindex="0">≡</span>
+            <h3 contenteditable="true" spellcheck="true" role="textbox" aria-label="Subgoal title" data-field="title">${escapeHTML(step.title || `Subgoal ${idx+1}`)}</h3>
+            <span class="chip">Step ${idx+1}</span>
+          </div>
+          <div class="controls">
+            <button class="btn" data-cmd="move-up" title="Move up">↑</button>
+            <button class="btn" data-cmd="move-down" title="Move down">↓</button>
+            <button class="btn danger" data-cmd="remove" title="Remove subgoal">🗑️</button>
+          </div>
+        </header>
+
+        <div class="row">
+          <input class="inline-input" type="date" value="${step.due || ""}" data-field="due" aria-label="Due date for subgoal">
+          <label class="checkbox"><input type="checkbox" data-field="done" ${step.done ? "checked":""} /> <span>Done</span></label>
+        </div>
+
+        <textarea placeholder="Notes / milestone definition (how do we know it's complete?)" data-field="note">${escapeHTML(step.note || "")}</textarea>
+      `;
+
+      // Inline edit handlers
+      card.addEventListener('input', (ev) => {
+        const t = ev.target;
+        const id = step.id;
+        if(t.matches('[data-field="title"]')){
+          setStep(id, { title: t.textContent.trim() });
+        } else if(t.matches('[data-field="note"]')){
+          setStep(id, { note: t.value });
+        } else if(t.matches('[data-field="due"]')){
+          setStep(id, { due: t.value });
+        }
+      });
+
+      card.addEventListener('change', (ev) => {
+        const t = ev.target;
+        if(t.matches('[data-field="done"]')){
+          setStep(step.id, { done: t.checked });
+          renderProgress(); // quick update
+        }
+      });
+
+      // Move & remove
+      card.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-cmd]');
+        if(!btn) return;
+        const cmd = btn.dataset.cmd;
+        const i = indexById(step.id);
+        if(cmd === 'move-up' && i>0) {
+          arrayMove(state.steps, i, i-1);
+          renderSteps(); renderProgress(); saveLocal();
+        }
+        if(cmd === 'move-down' && i < state.steps.length-1){
+          arrayMove(state.steps, i, i+1);
+          renderSteps(); renderProgress(); saveLocal();
+        }
+        if(cmd === 'remove'){
+          removeStep(step.id);
+        }
+      });
+
+      // Drag & drop
+      enableDrag(card);
+
+      els.staircase.appendChild(card);
+    });
+  }
+
+  function renderProgress(){
+    const total = state.steps.length +  (state.final.title ? 1 : 0);
+    const doneSteps = state.steps.filter(s => s.done).length + (state.final.done ? 1 : 0);
+    const pct = total === 0 ? 0 : Math.round((doneSteps/total)*100);
+    els.meter.style.width = `${pct}%`;
+    els.progressText.textContent = `${pct}% — ${doneSteps} of ${total} complete`;
+  }
+
+  /** ---------- Mutators ---------- */
+  const indexById = (id) => state.steps.findIndex(s => s.id === id);
+  const setStep = (id, partial) => {
+    const i = indexById(id);
+    if(i>=0){ state.steps[i] = { ...state.steps[i], ...partial }; saveLocal(); }
+  };
+  const removeStep = (id) => {
+    state.steps = state.steps.filter(s => s.id !== id);
+    renderSteps(); renderProgress(); saveLocal();
+  };
+  const addStep = (initial={}) => {
+    if(state.steps.length>=5){
+      toast("You already have 5 subgoals. Remove one to add another.", "warn");
+      return;
+    }
+    state.steps.push({
+      id: uid(),
+      title: initial.title || `Subgoal ${state.steps.length+1}`,
+      note:  initial.note  || "",
+      due:   initial.due   || "",
+      done:  initial.done  || false,
+    });
+    renderSteps(); renderProgress(); saveLocal();
+  };
+
+  /** ---------- Drag & Drop ---------- */
+  function enableDrag(card){
+    const handle = card.querySelector('.drag-handle');
+    let dragSrcEl = null;
+    let startIndex = -1;
+
+    const onPointerDown = (e) => {
+      dragSrcEl = card;
+      startIndex = indexById(card.dataset.id);
+      card.classList.add('dragging');
+      card.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e) => {
+      if(!dragSrcEl) return;
+      const rect = els.staircase.getBoundingClientRect();
+      const y = e.clientY - rect.top + els.staircase.scrollTop;
+      const siblings = $$('.step', els.staircase);
+      let targetIndex = siblings.findIndex(el => y < el.offsetTop + el.offsetHeight/2);
+      if(targetIndex === -1) targetIndex = siblings.length;
+      if(targetIndex !== startIndex){
+        // move in DOM/state
+        const curIndex = indexById(card.dataset.id);
+        arrayMove(state.steps, curIndex, targetIndex - (targetIndex>curIndex?1:0));
+        startIndex = targetIndex;
+        renderSteps(); // re-render to apply elevation/indices
+      }
+    };
+    const onPointerUp = (e) => {
+      if(!dragSrcEl) return;
+      dragSrcEl.classList.remove('dragging');
+      dragSrcEl.releasePointerCapture(e.pointerId);
+      dragSrcEl = null;
+      saveLocal();
+    };
+
+    handle.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }
+
+  /** ---------- Utilities ---------- */
+  function arrayMove(arr, from, to){
+    if(from===to) return arr;
+    const item = arr.splice(from,1)[0];
+    arr.splice(to,0,item);
+    return arr;
+  }
+  function escapeHTML(s){
+    return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /** ---------- Validation / SMART ---------- */
+  function smartCheck(){
+    const issues = [];
+    const title = (state.final.title||"").trim();
+    if(!title) issues.push("Final goal title is empty.");
+    const steps = state.steps;
+    if(steps.length < 3 || steps.length > 5) issues.push("You must have 3–5 subgoals.");
+    steps.forEach((s, i) => {
+      if(!(s.title||"").trim()) issues.push(`Subgoal ${i+1} has no title.`);
+      if(!s.note || s.note.trim().length < 8) issues.push(`Subgoal ${i+1}: add a clearer success definition in notes.`);
+      // Optional: date order heuristic
+      if(s.due && state.final.due && s.due > state.final.due) {
+        issues.push(`Subgoal ${i+1} due date is after the final goal's due date.`);
+      }
+    });
+    // SMART hints
+    const hints = [
+      "Specific — clear, unambiguous wording.",
+      "Measurable — a number or definitive check.",
+      "Achievable — realistic scope.",
+      "Relevant — aligned with final goal.",
+      "Time-bound — meaningful due date."
+    ];
+    return { issues, hints };
+  }
+
+  /** ---------- Toasts ---------- */
+  let toastTimer = null;
+  function toast(msg, variant="info"){
+    let t = $('#toast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.position='fixed';
+      t.style.left='50%';
+      t.style.bottom='24px';
+      t.style.transform='translateX(-50%)';
+      t.style.background='rgba(10,14,40,.95)';
+      t.style.border='1px solid #2b335b';
+      t.style.color='var(--text)';
+      t.style.padding='12px 14px';
+      t.style.borderRadius='12px';
+      t.style.boxShadow='var(--shadow)';
+      t.style.zIndex='999';
+      document.body.appendChild(t);
+    }
+    const colors = {
+      info:'#7c9cff', warn:'#ffd166', error:'#ff7a88', ok:'#4de2b6'
+    };
+    t.textContent = msg;
+    t.style.outline = 'none';
+    t.style.boxShadow = '0 0 0 3px ' + (variant==='ok'? 'rgba(77,226,182,.25)' : 'rgba(124,156,255,.25)');
+    t.style.borderColor = '#2b335b';
+    t.style.color = 'var(--text)';
+    t.style.background = 'rgba(10,14,40,.95)';
+    t.style.setProperty('--accent-now', colors[variant]||colors.info);
+    t.style.borderColor = '#2b335b';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.remove(), 2400);
+  }
+
+  /** ---------- Export / Import (JSON & URL) ---------- */
+  function download(filename, dataStr){
+    const blob = new Blob([dataStr], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function toShareURL(){
+    const base = location.href.split('#')[0].split('?')[0];
+    const packed = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    return `${base}#plan=${packed}`;
+  }
+  function tryLoadFromHash(){
+    const m = location.hash.match(/plan=([^&]+)/);
+    if(!m) return false;
+    try {
+      const json = decodeURIComponent(escape(atob(m[1])));
+      const obj = JSON.parse(json);
+      if(obj && obj.final && Array.isArray(obj.steps)){
+        state = obj;
+        renderAll();
+        toast("Loaded plan from link", "ok");
+        return true;
+      }
+    } catch(e){ console.warn("Invalid plan in URL"); }
+    return false;
+  }
+
+  /** ---------- Suggested generator (simple heuristic) ---------- */
+  function suggestSubgoals(){
+    const goal = (state.final.title||"").trim();
+    const base = goal || "your final goal";
+    const ideas = [
+      `Define scope & success metrics for ${base}`,
+      `Research & gather resources for ${base}`,
+      `Create a draft/first version toward ${base}`,
+      `Test with 3 users and collect feedback`,
+      `Polish & prepare launch assets`
+    ];
+    // add first 3 that aren't already present
+    const existingTitles = new Set(state.steps.map(s => s.title.trim().toLowerCase()));
+    for(const title of ideas){
+      if(state.steps.length>=5) break;
+      if(!existingTitles.has(title.toLowerCase())) addStep({ title });
+    }
+  }
+
+  /** ---------- Event wiring ---------- */
+  // Final goal fields
+  els.finalGoal.addEventListener('input', e => { state.final.title = e.target.value; saveLocal(); });
+  els.finalWhy.addEventListener('input',  e => { state.final.why   = e.target.value; saveLocal(); });
+  els.finalDue.addEventListener('change', e => { state.final.due   = e.target.value; saveLocal(); });
+  els.finalDone.addEventListener('change', e => { state.final.done = e.target.checked; saveLocal(); renderProgress(); });
+
+  // Buttons
+  els.addStepBtn.addEventListener('click', () => addStep());
+  els.addSuggestedBtn.addEventListener('click', () => suggestSubgoals());
+  els.newPlanBtn.addEventListener('click', () => {
+    if(confirm("Start a new plan? This will clear the current one.")){
+      state = { final:{ title:"", why:"", due:"", done:false }, steps:[] };
+      renderAll(); saveLocal(); location.hash = "";
+    }
+  });
+  els.saveBtn.addEventListener('click', () => { saveLocal(); toast("Saved to this browser ✅", "ok"); });
+  els.printBtn.addEventListener('click', () => window.print());
+  els.checkSmarterBtn.addEventListener('click', () => {
+    const {issues, hints} = smartCheck();
+    if(issues.length===0){
+      toast("Looks SMART! 🎯", "ok");
+      alert("SMART check passed! Great job.\n\nHints:\n- " + hints.join("\n- "));
+    } else {
+      alert("Please review:\n\n- " + issues.join("\n- ") + "\n\nSMART hints:\n- " + hints.join("\n- "));
+    }
+  });
+  els.checkLimitBtn.addEventListener('click', () => {
+    const n = state.steps.length;
+    if(n<3){ toast(`Add ${3-n} more subgoal${3-n===1?"":"s"} to reach 3.`, "warn"); }
+    else if(n>5){ toast(`You have ${n}. Remove ${n-5} to cap at 5.`, "warn"); }
+    else { toast("You're within the 3–5 sweet spot ✅", "ok"); }
+  });
+
+  els.exportBtn.addEventListener('click', () => {
+    const data = JSON.stringify(state, null, 2);
+    download('goal-staircase.json', data);
+  });
+  els.downloadJsonBtn.addEventListener('click', () => {
+    const data = JSON.stringify(state, null, 2);
+    download('goal-staircase.json', data);
+  });
+  els.copyLinkBtn.addEventListener('click', async () => {
+    const url = toShareURL();
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Share link copied! 🔗", "ok");
+    } catch {
+      prompt("Copy this link:", url);
+    }
+  });
+  els.importBtn.addEventListener('click', () => els.importFile.click());
+  els.importFile.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const text = await file.text();
+    try{
+      const obj = JSON.parse(text);
+      if(obj && obj.final && Array.isArray(obj.steps)){
+        state = obj; renderAll(); saveLocal(); toast("Plan imported ✅", "ok");
+      } else { throw new Error("Invalid format"); }
+    }catch(err){
+      alert("Import failed: " + err.message);
+    } finally {
+      e.target.value = "";
+    }
+  });
+  els.loadFromUrlBtn.addEventListener('click', () => {
+    const url = prompt("Paste the share link (URL with #plan=...)");
+    if(!url) return;
+    try {
+      const hash = new URL(url).hash;
+      if(!hash) throw new Error("No #plan in URL");
+      location.hash = hash;
+      if(!tryLoadFromHash()) alert("Could not load plan from the provided link.");
+    } catch(err){
+      alert("Invalid URL: " + err.message);
+    }
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='s'){ e.preventDefault(); saveLocal(); toast("Saved ✅", "ok"); }
+  });
+
+  /** ---------- Boot ---------- */
+  (function init(){
+    const loadedFromHash = tryLoadFromHash();
+    if(!loadedFromHash) loadLocal();
+    renderAll();
+    // If totally empty, prep three empty subgoals
+    if(state.steps.length===0){
+      addStep({ title:"Define success" });
+      addStep({ title:"Draft the core" });
+      addStep({ title:"Test & iterate" });
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
