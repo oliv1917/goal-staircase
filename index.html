@@ -459,11 +459,13 @@
   }
 
   function renderProgress(){
-    const total = state.steps.length +  (state.final.title ? 1 : 0);
-    const doneSteps = state.steps.filter(s => s.done).length + (state.final.done ? 1 : 0);
+    const hasFinal = !!state.final.title;
+    const total = state.steps.length + (hasFinal ? 1 : 0);
+    const doneSteps = state.steps.filter(s => s.done).length + (hasFinal && state.final.done ? 1 : 0);
     const pct = total === 0 ? 0 : Math.round((doneSteps/total)*100);
-    els.meter.style.width = `${pct}%`;
-    els.progressText.textContent = `${pct}% — ${doneSteps} af ${total} fuldført`;
+    const pctClamped = Math.min(pct, 100);
+    els.meter.style.width = `${pctClamped}%`;
+    els.progressText.textContent = `${pctClamped}% — ${doneSteps} af ${total} fuldført`;
   }
 
   /** ---------- Mutators ---------- */
